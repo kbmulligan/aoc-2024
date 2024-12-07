@@ -4,8 +4,8 @@ import (
     "fmt"
     "os"
     "strings"
-    //"sort"
-    //"strconv"
+    "regexp"
+    "strconv"
 )
 
 func absInt (x int) int {
@@ -31,34 +31,72 @@ func main() {
     inputString := string(input)
     fmt.Println(inputString)
 
-    newString := ""
 
-    for _, v := range inputString {
-        if (runeAllowed(v)) {
-            newString += string(v)
-        }
-    }    
+    doSegments := strings.Split(inputString, "do()")
+    fmt.Println(len(doSegments))
 
-    fmt.Println("========================================")
-    commands := strings.SplitAfter(newString, ")")
-
-    validCommands := make([]string, 0)
-    for _, command := range commands {
-        if (strings.Contains(command, "mul")) {
-            validCommands = append(validCommands, command)
-        }
+    segments := make([]string, 0)
+    for i,seg := range doSegments {
+        doNotSegments := strings.Split(seg, "don't()")
+        fmt.Println(i, len(doNotSegments))
+        segments = append(segments, doNotSegments[0])
     }
-
-    for _, command := range validCommands {
-        fmt.Println(command)
-    }
-
-    for _, command := range validCommands {
-        fmt.Println(command)
-    }
-
-    fmt.Println(len(validCommands))
     
+
+
+
+
+    sumTotal := 0
+    for i,s := range segments {
+
+        fmt.Println("========================================")
+        //commands := strings.SplitAfter(newString, ")")
+        re := regexp.MustCompile(`mul\(\d{1,3},\d{1,3}\)`)
+        commands := re.FindAllString(s, -1)
+
+        validCommands := make([]string, 0)
+        for _, command := range commands {
+            if (commandIsValid(command)) {
+                validCommands = append(validCommands, command)
+            } 
+            //else {
+            //    fmt.Println("Invalid: ", command) 
+            //}
+        }
+
+        fmt.Println(len(validCommands))
+        
+         
+        trimmedCommands := make([]string, 0)
+        for _, c := range validCommands {
+            noMul := strings.ReplaceAll(c, "mul", "")
+            noLeft := strings.ReplaceAll(noMul, "(", "")
+            noRight := strings.ReplaceAll(noLeft, ")", "")
+            trimmedCommands = append(trimmedCommands, noRight)
+        }
+
+        segmentTotal := 0
+        for _, c := range trimmedCommands {
+            arguments := strings.Split(c, ",")
+            //fmt.Println(arguments)
+            //fmt.Println(c)
+
+            arg1, _ := strconv.Atoi(arguments[0])
+            arg2, _ := strconv.Atoi(arguments[1])
+            segmentTotal += arg1 * arg2
+        }
+        
+        fmt.Println(i, segmentTotal)
+        sumTotal += segmentTotal
+    }
+    
+    fmt.Println("Sum Total: ", sumTotal)
+}
+
+func commandIsValid (c string) bool {
+    matched, err := regexp.MatchString(`mul\(\d{1,3},\d{1,3}\)`, c)
+    check(err)
+    return matched
 }
 
 func runeAllowed (v rune) bool {
